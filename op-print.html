@@ -1,0 +1,36 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="op-print">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+  </template>
+
+  <script>
+    /**
+     * `op-print`
+     * Print a controllable section of a page
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class OpPrint extends Polymer.Element {
+      static get is() { return 'op-print'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'op-print'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(OpPrint.is, OpPrint);
+  </script>
+</dom-module>
