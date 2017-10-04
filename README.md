@@ -31,7 +31,7 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
   </template>
 
   <script>
-    class xCustom extends Polymer.mixinBehaviors([Polymer.AppLocalizeBehavior], Polymer.Element) {
+    class xCustom extends Polymer.Element {
 
       static get is() { return 'x-custom'; }
 
@@ -68,7 +68,7 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
       connectedCallback() {
         super.connectedCallback();
 
-        // events are named after <op-print> element id: '[id-attribute]:print'
+        // events are named after op-print element id: '[id-attribute]:print'
         window.addEventListener('print-list:print', this._boundPrintList);
         window.addEventListener('print-entire-page:print', this._boundPrintPage);
       }
