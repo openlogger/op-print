@@ -16,11 +16,12 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
   <style media="screen">
     op-print {
       margin-top: 10px;
+
+      // styling applied to button element
       --op-print-button: {
         background: #6f98f6;
         color: #fff;
         text-transform: uppercase;
-
       }
     }
   </style>
@@ -66,6 +67,8 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
 
       connectedCallback() {
         super.connectedCallback();
+        
+        // events are named after <op-print> element id: '[id-attribute]:print'
         window.addEventListener('print-list:print', this._boundPrintList);
         window.addEventListener('print-entire-page:print', this._boundPrintPage);
       }
@@ -78,10 +81,14 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
 
       printList(e) {
 
-        let listTpl = '<h2>{{MacAdress}}</h2>';
+        // object properties
+        let listTpl = '<h2>{{index}}: {{value.subvalue}}</h2>';
+
+        // if conditions
         listTpl += '{{@if value.condition}}';
         listTpl += '<p>The condition is met!</p>'
         listTpl += '{{/if}}';
+
         // e.detail.printer.print( data, options )
         // data is an array of strings or objects, options is an object
         e.detail.printer.print([
@@ -89,8 +96,8 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
             {
               type: 'ul', // 'ul' | 'ol'
               class: 'list', // css class
-              tpl: listTpl, // string, see example above
-              items: this.listExample, // array
+              tpl: listTpl, // template, see example above
+              items: this.listExample, // array of objects
             },
             '<footer>@ 2017</footer>',
           ],
