@@ -17,7 +17,7 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
     op-print {
       margin-top: 10px;
 
-      // styling applied to button element
+      /* styling applied to button element */
       --op-print-button: {
         background: #6f98f6;
         color: #fff;
@@ -67,7 +67,7 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
 
       connectedCallback() {
         super.connectedCallback();
-        
+
         // events are named after <op-print> element id: '[id-attribute]:print'
         window.addEventListener('print-list:print', this._boundPrintList);
         window.addEventListener('print-entire-page:print', this._boundPrintPage);
