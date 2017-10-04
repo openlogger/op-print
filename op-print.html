@@ -132,8 +132,6 @@
         }
         iframe.contentWindow.document.write('<body>' + html + '</body>');
         iframe.contentWindow.document.write('</html>');
-        iframe.contentWindow.document.close();
-
         if( print ) {
           iframe.onload = function() {
             setTimeout(function() {
@@ -142,7 +140,7 @@
             }, 200);
           };
         }
-
+        iframe.contentWindow.document.close();
       }
 
       defaultData() {
