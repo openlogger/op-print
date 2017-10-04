@@ -44,14 +44,21 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
                 index: 1,
                 value: {
                   condition: true,
-                  subvalue: 'First item'
+                  subvalue: 'First item',
+                  sublist: [{
+                    name: 'I am sub 1!'
+                  }, {
+                    name: 'I am sub 2!'
+                  }]
                 }
-              },
-              {
+              }, {
                 index: 2,
                 value: {
                   condition: false,
-                  subvalue: 'Second item'
+                  subvalue: 'Second item',
+                  sublist: [{
+                    name: 'I am sub 1!'
+                  }]
                 }
               }]
             }
@@ -84,10 +91,15 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
         // object properties
         let listTpl = '<h2>{{index}}: {{value.subvalue}}</h2>';
 
-        // if conditions
+        // if conditions (Cannot be nested!)
         listTpl += '{{@if value.condition}}';
-        listTpl += '<p>The condition is met!</p>'
+        listTpl += '<p>The condition is met!</p>';
         listTpl += '{{/if}}';
+
+        // each loop (Cannot be nested!)
+        listTpl += '{{@each value.sublist}}';
+        listTpl += '<p>{{name}}</p>';
+        listTpl += '{{/each}}';
 
         // e.detail.printer.print( data, options )
         // data is an array of strings or objects, options is an object

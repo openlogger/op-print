@@ -109,10 +109,22 @@
           }
           return '';
         });
-        r = r.replace(/{{([a-zA-Z\.]*)}}/g, function(match, $1, offset, original) {
+        r = r.replace(/{{@each\s([a-zA-Z\.]*)}}(.*){{\/each}}/g, (match, $1, $2, offset, original) => {
+          let list = Polymer.Path.get(item, $1),
+              r = '';
+          for( var i in list ) {
+            r += this.stampProps($2, list[i]);
+          }
+          return r;
+        });
+        r = this.stampProps(r, item);
+        return r;
+      }
+
+      stampProps( str, item ) {
+        return str.replace(/{{([a-zA-Z\.]*)}}/g, function(match, $1, offset, original) {
           return Polymer.Path.get(item, $1);
         });
-        return r;
       }
 
       printDoc( html, stylesheets ) {
@@ -141,6 +153,8 @@
           };
         }
         iframe.contentWindow.document.close();
+
+
       }
 
       defaultData() {
