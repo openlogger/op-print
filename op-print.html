@@ -1,13 +1,21 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../shadycss/apply-shim.html">
 
 <dom-module id="op-print">
   <template>
     <style>
       :host {
-        display: block;
+        display: flex;
+        justify-content: center;
+      }
+      button {
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        @apply --op-print-button;
       }
     </style>
-    <button type="button" name="button"><slot></slot></button>
+    <button type="button" name="button" on-click="fireAway"><slot></slot></button>
   </template>
 
   <script>
@@ -23,11 +31,125 @@
       static get is() { return 'op-print'; }
       static get properties() {
         return {
-          prop1: {
-            type: String,
-            value: 'op-print'
+          data: {
+            type: Object
+          },
+          dataCb: {
           }
         };
+      }
+
+      fireAway(e) {
+        let data = {};
+        let id = this.getAttribute('id');
+        if( !id || id == '' ) {
+          console.error('<op-print> must have a valid id');
+          return;
+        }
+        this.dispatchEvent(new CustomEvent(id + ':print', {bubbles: true, composed: true, detail: {printer: this}}));
+      }
+
+      print( data, options ) {
+        options = options || {};
+        if( !data ) {
+          window.print();
+          return;
+        }
+        let item,
+            stylesheets = options.stylesheets || [],
+            htmlPart,
+            html = '';
+        if( !options.omitHeader ) {
+          let title = options.logo ? '<img class="logo" src="' + options.logo + '" />' : '';
+          title += options.omitDocumentTitle ? '' : document.title;
+          title += options.title ? ' &dash; ' + options.title : '';
+          data.unshift('<h1 class="doc-title">' + title + '</h1>');
+        }
+        data.unshift('<div class="print-body">');
+        data.push('</div>');
+        html = data.reduce( (html, item) => {
+          if( typeof item == 'string' ) {
+            htmlPart = item;
+          } else {
+            htmlPart = this.tpl( item.type )(item);
+          }
+          return html + htmlPart;
+        });
+        this.printDoc(html, stylesheets);
+      }
+
+      tpl( type ) {
+        switch (type) {
+          case 'ul':
+            return function(item) {
+              item.class = item.class || '';
+              return '<ul class="' + item.class + '">' + this.tpl_list(item) + '<ul>';
+            }.bind(this);
+          case 'ol':
+            return function(item) {
+              item.class = item.class || '';
+              return '<ol class="' + item.class + '">' + this.tpl_list(item) + '<ol>';
+            }.bind(this);
+          default:
+        }
+      }
+
+      tpl_list( args ) {
+        let self = this;
+        let r = args.items.map((item) => {
+          return '<li>' + this.templatize(args.tpl, item) + '</li>';
+        }).join('');
+        return r;
+      }
+
+      templatize( tpl, item ) {
+        var r = tpl.replace(/{{@if\s([a-zA-Z\.]*)}}(.*){{\/if}}/g, function(match, $1, $2, offset, original) {
+          if( Polymer.Path.get(item, $1) ) {
+            return $2;
+          }
+          return '';
+        });
+        r = r.replace(/{{([a-zA-Z\.]*)}}/g, function(match, $1, offset, original) {
+          return Polymer.Path.get(item, $1);
+        });
+        return r;
+      }
+
+      printDoc( html, stylesheets ) {
+        let print = true;
+        let iframe = document.createElement('iframe');
+
+        document.body.appendChild(iframe);
+        iframe.contentWindow.document.open();
+        if( print ) {
+          iframe.style.height = 0;
+        } else {
+          iframe.style.width = '100vw';
+        }
+        iframe.contentWindow.document.write('<html moznomarginboxes mozdisallowselectionprint>');
+        if( stylesheets.length ) {
+          iframe.contentWindow.document.write('<head>' + stylesheets.map( src => { return '<link rel="stylesheet" type="text/css" href="' + src + '">' } ).join('') + '</head>');
+        }
+        iframe.contentWindow.document.write('<body>' + html + '</body>');
+        iframe.contentWindow.document.write('</html>');
+        iframe.contentWindow.document.close();
+
+        if( print ) {
+          iframe.onload = function() {
+            setTimeout(function() {
+              iframe.contentWindow.print();
+              iframe.parentNode.removeChild(iframe);
+            }, 200);
+          };
+        }
+
+      }
+
+      defaultData() {
+        return {
+          heading: 'No data method found!',
+          body: 'The parent element of <op-print> is missing a method with the name, that needs to return an object with the data to be printed',
+        }
       }
     }
 
