@@ -111,7 +111,7 @@ A Polymer 2.0 element for printing data. Adds a print button and provides a func
         window.removeEventListener('print-entire-page:print', this._boundPrintPage);
       }
 
-      printList(e) {
+      printList(evt) {
 
         // create a template for the list
         let tpl = '<h2>{{index}}: {{value.subvalue}}</h2>';
@@ -126,9 +126,11 @@ A Polymer 2.0 element for printing data. Adds a print button and provides a func
         tpl += '<p>{{name}}</p>';
         tpl += '{{/each}}';
 
-        // e.detail.printer.print( data, options )
+        // the op-print element is provided i evt.detail.printer
+
+        // evt.detail.printer.print( data, options )
         // data is an array of strings or objects, options is an object
-        e.detail.printer.print(
+        evt.detail.printer.print(
           [
             '<h1>A string</h1>', // strings are put as is
             {
@@ -148,9 +150,9 @@ A Polymer 2.0 element for printing data. Adds a print button and provides a func
         );
       }
 
-      printPage(e) {
+      printPage(evt) {
         // with no arguments, the entire page is printed
-        e.detail.printer.print();
+        evt.detail.printer.print();
       }
     }
 
