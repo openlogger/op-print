@@ -17,17 +17,47 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
     op-print {
       margin-top: 10px;
 
-      /* styling applied to button element */
+      /* css mixins: */
+
+      --op-print-button-general: {
+        /* defaults: */
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+      }
       --op-print-button: {
-        background: #6f98f6;
-        color: #fff;
-        text-transform: uppercase;
+        /* defaults: (none)*/
+      }
+      --op-cancel-button: {
+        /* defaults: */
+        display: none;
+      }
+      --op-preview-iframe: {
+        /* defaults: */
+        display: none;
+        border: none;
+        background-color: #fff;
+        width: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
       }
     }
   </style>
   <template>
-    <op-print id="print-list">Print list</op-print>
-    <op-print id="print-entire-page">Print entire page</op-print>
+    <!-- print button with preview -->
+    <op-print id="print-list" preview>
+      <span>Print list</span>
+      <span slot="print-button">Print list</span>
+      <span slot="cancel-button">Cancel</span>
+    </op-print>
+
+    <!-- print button without preview (no cancel-button slot needed)-->
+    <op-print id="print-entire-page">
+      <span slot="print-button">Print page</span>
+    </op-print>
   </template>
 
   <script>

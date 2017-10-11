@@ -4,18 +4,54 @@
 <dom-module id="op-print">
   <template>
     <style>
-      :host {
-        display: flex;
-        justify-content: center;
+      :host([show-preview]) iframe,
+      :host([show-preview]) .cancel {
+        display: inherit;
+      }
+      :host([show-preview]) .buttons {
+        padding: 5px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1001;
+        background: #fff;
+        border-top: 1px solid #eee;
+      }
+      :host([show-preview]) button.cancel {
+        float: right;
       }
       button {
         border: none;
         padding: 10px;
         cursor: pointer;
+        @apply --op-print-button-general;
+      }
+      button.print {
         @apply --op-print-button;
       }
+      button.cancel {
+        display: none;
+        @apply --op-cancel-button;
+      }
+      iframe {
+        display: none;
+        border: none;
+        background-color: #fff;
+        width: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        @apply --op-preview-iframe;
+      }
     </style>
-    <button type="button" name="button" on-click="fireAway"><slot></slot></button>
+    <iframe id="content"></iframe>
+    <div class="buttons">
+      <button class="print" type="button" on-click="fireAway"><slot name="print-button">Print</slot></button>
+      <button class="cancel" type="button" on-click="cancel"><slot name="cancel-button">Cancel</slot></button>
+    </div>
   </template>
 
   <script>
@@ -31,16 +67,27 @@
       static get is() { return 'op-print'; }
       static get properties() {
         return {
-          data: {
-            type: Object
+          preview: {
+            type: Boolean,
+            value: false
           },
-          dataCb: {
+          stylesheets: {
+            type: Array
+          },
+          content: {
+            type: String
+          },
+          iframe: {},
+          showPreview: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true,
+            readOnly: true
           }
         };
       }
 
       fireAway(e) {
-        let data = {};
         let id = this.getAttribute('id');
         if( !id || id == '' ) {
           console.error('<op-print> must have a valid id');
@@ -49,16 +96,27 @@
         this.dispatchEvent(new CustomEvent(id + ':print', {bubbles: true, composed: true, detail: {printer: this}}));
       }
 
+      cancel(e) {
+        this.previewContent = '';
+        this._setShowPreview(false);
+      }
+
       print( data, options ) {
         options = options || {};
         if( !data ) {
           window.print();
           return;
+        } else if( this.previewContent ) {
+          this.previewContent = false;
+          this.iframe.contentWindow.print();
+          return;
         }
         let item,
-            stylesheets = options.stylesheets || [],
             htmlPart,
             html = '';
+
+        this.stylesheets = options.stylesheets || [];
+
         if( !options.omitHeader ) {
           let title = options.logo ? '<img class="logo" src="' + options.logo + '" />' : '';
           title += options.omitDocumentTitle ? '' : document.title;
@@ -67,15 +125,28 @@
         }
         data.unshift('<div class="print-body">');
         data.push('</div>');
+
         html = data.reduce( (html, item) => {
           if( typeof item == 'string' ) {
             htmlPart = item;
           } else {
-            htmlPart = this.tpl( item.type )(item);
+            if( !item.type ) {
+              console.error('Object must be provided with a "type" property');
+            } else if( typeof this.tpl( item.type ) === 'function' ) {
+              htmlPart = this.tpl( item.type )(item);
+            } else {
+              htmlPart = '';
+              console.error('"' + item.type + '" is not a valid type');
+            }
           }
           return html + htmlPart;
         });
-        this.printDoc(html, stylesheets);
+
+        if( this.preview ) {
+          this.setupPreview(html);
+        } else {
+          this.printDoc(html);
+        }
       }
 
       tpl( type ) {
@@ -83,18 +154,20 @@
           case 'ul':
             return function(item) {
               item.class = item.class || '';
-              return '<ul class="' + item.class + '">' + this.tpl_list(item) + '<ul>';
+              return '<ul class="' + item.class + '">' + this.listTpl(item) + '<ul>';
             }.bind(this);
+
           case 'ol':
             return function(item) {
               item.class = item.class || '';
-              return '<ol class="' + item.class + '">' + this.tpl_list(item) + '<ol>';
+              return '<ol class="' + item.class + '">' + this.listTpl(item) + '<ol>';
             }.bind(this);
+
           default:
         }
       }
 
-      tpl_list( args ) {
+      listTpl( args ) {
         let self = this;
         let r = args.items.map((item) => {
           return '<li>' + this.templatize(args.tpl, item) + '</li>';
@@ -127,42 +200,51 @@
         });
       }
 
-      printDoc( html, stylesheets ) {
-        let print = true;
-        let iframe = document.createElement('iframe');
+      setupPreview( html ) {
+        this.previewContent = true;
+        this._setShowPreview(true);
+        this.iframe = this.$.content;
+        this.previewContent = html;
+        this.setupIframe( html );
+      }
 
-        document.body.appendChild(iframe);
-        iframe.contentWindow.document.open();
-        if( print ) {
-          iframe.style.height = 0;
-        } else {
-          iframe.style.width = '100vw';
-        }
-        iframe.contentWindow.document.write('<html moznomarginboxes mozdisallowselectionprint>');
-        if( stylesheets.length ) {
-          iframe.contentWindow.document.write('<head>' + stylesheets.map( src => { return '<link rel="stylesheet" type="text/css" href="' + src + '">' } ).join('') + '</head>');
-        }
-        iframe.contentWindow.document.write('<body>' + html + '</body>');
-        iframe.contentWindow.document.write('</html>');
-        if( print ) {
-          iframe.onload = function() {
-            setTimeout(function() {
-              iframe.contentWindow.print();
-              iframe.parentNode.removeChild(iframe);
-            }, 200);
-          };
-        }
-        iframe.contentWindow.document.close();
+      setupIframe( html ) {
 
+        this.iframe.contentWindow.document.open();
+
+        this.iframe.contentWindow.document.write('<html moznomarginboxes mozdisallowselectionprint>');
+        if( this.stylesheets.length ) {
+          this.iframe.contentWindow.document.write('<head>' + this.stylesheets.map( src => { return '<link rel="stylesheet" type="text/css" href="' + src + '">' } ).join('') + '</head>');
+        }
+        this.iframe.contentWindow.document.write('<body>' + html + '</body>');
+        this.iframe.contentWindow.document.write('</html>');
+
+        if( this.preview ) {
+          this.iframe.contentWindow.document.close();
+        }
 
       }
 
-      defaultData() {
-        return {
-          heading: 'No data method found!',
-          body: 'The parent element of <op-print> is missing a method with the name, that needs to return an object with the data to be printed',
-        }
+      printDoc( html ) {
+
+        this.iframe = document.createElement('iframe');
+        this.iframe.style.height = 0;
+        this.iframe.style.width = 0;
+        document.body.appendChild( this.iframe );
+
+        this.setupIframe( html );
+
+        this.iframe.onload = function() {
+          setTimeout(() => {
+            this.contentWindow.print();
+            this.parentNode.removeChild(this);
+          }, 200);
+        };
+
+        this.iframe.contentWindow.document.close();
+
       }
+
     }
 
     window.customElements.define(OpPrint.is, OpPrint);
