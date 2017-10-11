@@ -1,10 +1,6 @@
 # \<op-print\>
 
-Print a controllable section of a page
-
-## Install the Polymer-CLI
-
-First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your element locally.
+A Polymer 2.0 element for printing data. Adds a print button and provides a function for printing custom data and including custom stylesheets.
 
 ## Usage
 
@@ -18,7 +14,6 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
       margin-top: 10px;
 
       /* css mixins: */
-
       --op-print-button-general: {
         /* defaults: */
         border: none;
@@ -118,36 +113,36 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
 
       printList(e) {
 
-        // object properties
-        let listTpl = '<h2>{{index}}: {{value.subvalue}}</h2>';
+        // create a template for the list
+        let tpl = '<h2>{{index}}: {{value.subvalue}}</h2>';
 
         // if conditions (Cannot be nested!)
-        listTpl += '{{@if value.condition}}';
-        listTpl += '<p>The condition is met!</p>';
-        listTpl += '{{/if}}';
+        tpl += '{{@if value.condition}}';
+        tpl += '<p>The condition is met!</p>';
+        tpl += '{{/if}}';
 
         // each loop (Cannot be nested!)
-        listTpl += '{{@each value.sublist}}';
-        listTpl += '<p>{{name}}</p>';
-        listTpl += '{{/each}}';
+        tpl += '{{@each value.sublist}}';
+        tpl += '<p>{{name}}</p>';
+        tpl += '{{/each}}';
 
         // e.detail.printer.print( data, options )
         // data is an array of strings or objects, options is an object
-        e.detail.printer.print([
+        e.detail.printer.print(
+          [
             '<h1>A string</h1>', // strings are put as is
             {
               type: 'ul', // 'ul' | 'ol'
               class: 'list', // css class
-              tpl: listTpl, // template, see example above
+              tpl: tpl, // template, see example above
               items: this.listExample, // array of objects
             },
             '<footer>@ 2017</footer>',
           ],
           {
             omitHeader: true, // true | false, default false
-            omitDocumentTitle: true, // true | false, default false
             logo: '../images/logo.svg', // logo source for header, default ''
-            title: 'Print example', // string
+            title: 'Print example', // string or boolean. If true, document.title is used. If false or omitted, no title is displayed
             stylesheets: ['../src/print-styles/common.css'] // array of style urls, default []
           }
         );
@@ -163,12 +158,3 @@ First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polyme
   </script>
 </dom-module>
 ```
-
-
-## Viewing Your Element
-
-```
-$ polymer serve
-```
-
-Your application is already set up to be tested via [web-component-tester](https://github.com/Polymer/web-component-tester). Run `polymer test` to run your application's test suite locally.

@@ -119,8 +119,11 @@
 
         if( !options.omitHeader ) {
           let title = options.logo ? '<img class="logo" src="' + options.logo + '" />' : '';
-          title += options.omitDocumentTitle ? '' : document.title;
-          title += options.title ? ' &dash; ' + options.title : '';
+          if( typeof options.title === 'string' ) {
+            title += ' &dash; ' + options.title;
+          } else {
+            title += options.title === true ? ' &dash; ' + document.title : '';
+          }
           data.unshift('<h1 class="doc-title">' + title + '</h1>');
         }
         data.unshift('<div class="print-body">');
