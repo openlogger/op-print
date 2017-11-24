@@ -46,6 +46,11 @@
         z-index: 1000;
         @apply --op-preview-iframe;
       }
+      @media print {
+        .buttons {
+          display: none;
+        }
+      }
     </style>
     <iframe id="content"></iframe>
     <div class="buttons">
